@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Unity Control Panel</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f6f9;
+}
+
+/* Top Bar */
+.topbar {
+  background: #0a2540;
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status {
+  font-weight: 600;
+}
+
+/* Layout */
+.main {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+.left {
+  width: 30%;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-right: 1px solid #ddd;
+}
+
+.right {
+  width: 70%;
+  display: none;
+  padding: 40px;
+  gap: 30px;
+}
+
+/* Cards */
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 250px;
+  height: 250px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+button {
+  background: #0a66c2;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #004182;
+}
+
+.indicator {
+  margin-top: 15px;
+  font-weight: bold;
+}
+.green { color: #28a745; }
+.red { color: #dc3545; }
+</style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>Unity Touch Table – Control Panel</div>
+  <div class="status" id="serverStatus">Checking server...</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="left">
+    <button onclick="showMenu()">Touch Table</button>
+  </div>
+
+  <div class="right" id="menu">
+
+    <div class="card">
+      <h3>Unity 1</h3>
+      <button onclick="openUnity('unity1')">Launch</button>
+      
+    </div>
+
+    <div class="card">
+      <h3>Unity 2</h3>
+      <button onclick="openUnity('unity2')">Launch</button>
+      
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SERVER = "http://10.112.84.121:5001"; // or Tailscale IP
+
+function showMenu() {
+  document.getElementById("menu").style.display = "flex";
+}
+
+// Server status
+function checkServer() {
+  fetch(SERVER + "/health")
+    .then(() => {
+      serverStatus.innerHTML = "🟢 Server Running";
+    })
+    .catch(() => {
+      serverStatus.innerHTML = "🔴 Server Offline";
+    });
+}
+
+// Unity status
+function checkUnityStatus() {
+  fetch(SERVER + "/unity-status")
+    .then(res => res.json())
+    .then(data => {
+      unity1Status.innerHTML = data.unity1
+        ? "<span class='green'>🟢 Running</span>"
+        : "<span class='red'>🔴 Not Running</span>";
+
+      unity2Status.innerHTML = data.unity2
+        ? "<span class='green'>🟢 Running</span>"
+        : "<span class='red'>🔴 Not Running</span>";
+    });
+}
+
+function openUnity(app) {
+  fetch(SERVER + "/open-unity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ app })
+  });
+}
+
+// Auto refresh
+checkServer();
+checkUnityStatus();
+setInterval(checkUnityStatus, 3000);
+</script>
+
+</body>
+</html>
